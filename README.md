@@ -1,4 +1,39 @@
-# torch-rnn
+# Fake Bot (torch-rnn)
+
+Essentially this is just the `torch-rnn` library, with a script to grab
+training data by hashtag from twitter. Script developed with extensive inspiration from [deep_cyber](https://github.com/armbues/deep_cyber).
+
+## Data collection
+To collect tweets from a hashtag, use the python script **fake.py**.
+Prerequisites:
+```
+pip install python-twitter
+```
+
+Edit the **fake.py** script to include your Twitter API key.
+``
+TWITTER_CONSUMER_KEY = '<TWITTER_CONSUMER_KEY>'
+TWITTER_CONSUMER_SECRET = '<TWITTER_CONSUMER_SECRET>'
+TWITTER_ACCESS_TOKEN_KEY = '<TWITTER_ACCESS_TOKEN_KEY>'
+TWITTER_ACCESS_TOKEN_SECRET = '<TWITTER_ACCESS_TOKEN_SECRET>'
+```
+
+Feel free to replace
+```
+tweets = api.GetSearch('#fake', ...
+```
+with the hashtag of your choice.
+
+Also note that you will eventually run into the rate limit on twitter's
+API. So for now this is as much data as you get :/
+
+
+Pls follow directions in *Installation* below. Recommend skipping the
+CUDA/OpenCL steps and running all torch commands with option `-gpu -1`. It
+will be slower but better than nothing at all.
+
+
+## What is torch-rnn?
 torch-rnn provides high-performance, reusable RNN and LSTM modules for torch7, and uses these modules for character-level
 language modeling similar to [char-rnn](https://github.com/karpathy/char-rnn).
 
@@ -91,6 +126,11 @@ Jeff Thompson has written a very detailed installation guide for OSX that you [c
 # Usage
 To train a model and use it to generate new text, you'll need to follow three simple steps:
 
+## Step 0: Fetch Twitter data
+```bash
+python data/fake.py
+```
+
 ## Step 1: Preprocess the data
 You can use any text file for training models. Before training, you'll need to preprocess the data using the script
 `scripts/preprocess.py`; this will generate an HDF5 file and JSON file containing a preprocessed version of the data.
@@ -99,9 +139,9 @@ If you have training data stored in `my_data.txt`, you can run the script like t
 
 ```bash
 python scripts/preprocess.py \
-  --input_txt my_data.txt \
-  --output_h5 my_data.h5 \
-  --output_json my_data.json
+  --input_txt data/fake.txt \
+  --output_h5 data/fake.h5 \
+  --output_json data/fake.json
 ```
 
 This will produce files `my_data.h5` and `my_data.json` that will be passed to the training script.
@@ -113,16 +153,16 @@ After preprocessing the data, you'll need to train the model using the `train.lu
 You can run the training script like this:
 
 ```bash
-th train.lua -input_h5 my_data.h5 -input_json my_data.json
+th train.lua -input_h5 data/fake.h5 -input_json data/fake.json
 ```
 
-This will read the data stored in `my_data.h5` and `my_data.json`, run for a while, and save checkpoints to files with 
+This will read the data stored in `data/fake.h5` and `data/fake.json`, run for a while, and save checkpoints to files with 
 names like `cv/checkpoint_1000.t7`.
 
 You can change the RNN model type, hidden state size, and number of RNN layers like this:
 
 ```bash
-th train.lua -input_h5 my_data.h5 -input_json my_data.json -model_type rnn -num_layers 3 -rnn_size 256
+th train.lua -input_h5 data/fake.h5 -input_json data/fake.json -model_type rnn -num_layers 3 -rnn_size 512 -gpu -1
 ```
 
 By default this will run in GPU mode using CUDA; to run in CPU-only mode, add the flag `-gpu -1`.
@@ -135,7 +175,7 @@ There are many more flags you can use to configure training; [read about them he
 After training a model, you can generate new text by sampling from it using the script `sample.lua`. Run it like this:
 
 ```bash
-th sample.lua -checkpoint cv/checkpoint_10000.t7 -length 2000
+th sample.lua -checkpoint cv/checkpoint_10000.t7 -length 2000 -gpu -1
 ```
 
 This will load the trained checkpoint `cv/checkpoint_10000.t7` from the previous step, sample 2000 characters from it,
@@ -145,29 +185,3 @@ By default the sampling script will run in GPU mode using CUDA; to run in CPU-on
 to run in OpenCL mode add the flag `-gpu_backend opencl`.
 
 There are more flags you can use to configure sampling; [read about them here](doc/flags.md#sampling).
-
-# Benchmarks
-To benchmark `torch-rnn` against `char-rnn`, we use each to train LSTM language models for the tiny-shakespeare dataset
-with 1, 2 or 3 layers and with an RNN size of 64, 128, 256, or 512. For each we use a minibatch size of 50, a sequence 
-length of 50, and no dropout. For each model size and for both implementations, we record the forward/backward times and 
-GPU memory usage over the first 100 training iterations, and use these measurements to compute the mean time and memory 
-usage.
-
-All benchmarks were run on a machine with an Intel i7-4790k CPU, 32 GB main memory, and a Titan X GPU.
-
-Below we show the forward/backward times for both implementations, as well as the mean speedup of `torch-rnn` over 
-`char-rnn`. We see that `torch-rnn` is faster than `char-rnn` at all model sizes, with smaller models giving a larger
-speedup; for a single-layer LSTM with 128 hidden units, we achieve a **1.9x speedup**; for larger models we achieve about
-a 1.4x speedup.
-
-<img src='imgs/lstm_time_benchmark.png' width="800px">
-
-Below we show the GPU memory usage for both implementations, as well as the mean memory saving of `torch-rnn` over
-`char-rnn`. Again `torch-rnn` outperforms `char-rnn` at all model sizes, but here the savings become more significant for
-larger models: for models with 512 hidden units, we use **7x less memory** than `char-rnn`.
-
-<img src='imgs/lstm_memory_benchmark.png' width="800px">
-
-
-# TODOs
-- Get rid of Python / JSON / HDF5 dependencies?
