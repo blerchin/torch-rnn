@@ -11,7 +11,7 @@ pip install python-twitter
 ```
 
 Edit the **fake.py** script to include your Twitter API key.
-``
+```
 TWITTER_CONSUMER_KEY = '<TWITTER_CONSUMER_KEY>'
 TWITTER_CONSUMER_SECRET = '<TWITTER_CONSUMER_SECRET>'
 TWITTER_ACCESS_TOKEN_KEY = '<TWITTER_ACCESS_TOKEN_KEY>'
