@@ -5,18 +5,20 @@ from __future__ import print_function
 import time
 
 import twitter
+import json
 
-TWITTER_CONSUMER_KEY = 'CONSUMER_KEY'
-TWITTER_CONSUMER_SECRET = 'CONSUMER_SECRET'
-TWITTER_ACCESS_TOKEN_KEY = 'TWITTER_ACCESS_TOKEN_KEY'
-TWITTER_ACCESS_TOKEN_SECRET = 'TWITTER_ACCESS_TOKEN_SECRET'
+config = json.loads(open('config.json').read())
 
-api = twitter.Api(consumer_key=TWITTER_CONSUMER_KEY, consumer_secret=TWITTER_CONSUMER_SECRET, access_token_key=TWITTER_ACCESS_TOKEN_KEY, access_token_secret=TWITTER_ACCESS_TOKEN_SECRET)
+api = twitter.Api(consumer_key=config['TWITTER_CONSUMER_KEY'],
+        consumer_secret=config['TWITTER_CONSUMER_SECRET'],
+        access_token_key=config['TWITTER_ACCESS_TOKEN_KEY'],
+        access_token_secret=config['TWITTER_ACCESS_TOKEN_SECRET']
+        )
 
 
 fpath = 'fake.txt'
 max_id = None
-with open(fpath, 'wb') as f:
+with open(fpath, 'a+') as f:
         for i in range(200):
                 tweets = api.GetSearch('#fake', count=200, max_id=max_id)
 
@@ -25,7 +27,7 @@ with open(fpath, 'wb') as f:
 
                 for status in tweets:
                         try:
-                                text = status.text
+                                text = '\n\n\n' + status.text
 
                                 print(text, file=f)
                                 print(text)
