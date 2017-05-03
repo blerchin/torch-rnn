@@ -132,6 +132,11 @@ python data/fake.py
 ```
 
 ## Step 1: Preprocess the data
+Unicode can cause problems for lua/torch. To convert to pure ascii:
+```
+iconv -c -f utf8 -t ascii/translit < data/fake.txt > data/fake_ascii.txt
+```
+
 You can use any text file for training models. Before training, you'll need to preprocess the data using the script
 `scripts/preprocess.py`; this will generate an HDF5 file and JSON file containing a preprocessed version of the data.
 
